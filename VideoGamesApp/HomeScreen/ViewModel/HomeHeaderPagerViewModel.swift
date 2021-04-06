@@ -25,5 +25,9 @@ extension HomeHeaderPagerViewModel {
     func cellForRowAt(index: Int) -> Game {
         return games[index]
     }
+    func didSelectItemAt(index: Int) -> GameDetailViewModel {
+        let id = cellForRowAt(index: index).id
+        return GameDetailViewModel.init(id: id)
+    }
     
 }

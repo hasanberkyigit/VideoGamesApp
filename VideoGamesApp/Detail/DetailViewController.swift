@@ -7,16 +7,8 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 import Kingfisher
-
-
-protocol UpdateDetailImageDelegate {
-    func updateImage()
-}
-
-protocol FavoriteDelegate {
-    func didFavorite()
-}
 
 class DetailViewController: UIViewController {
     
@@ -26,7 +18,7 @@ class DetailViewController: UIViewController {
             viewModel?.fetchGameDetail()
         }
     }
-   
+    
     //MARK: - IBOUTLETS
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var gameImage: UIImageView!
@@ -41,12 +33,11 @@ class DetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         bindGameDetail()
-        closeButton.backgroundColor = UIColor(red: 200.0/255.0, green:200.0/255.0, blue:200.0/255.0, alpha:0.5)
+        
     }
    
     
     //MARK:- Functions
-    
     func setViewModel(viewModel: GameDetailViewModel){
         self.viewModel = viewModel
     }
@@ -63,37 +54,39 @@ class DetailViewController: UIViewController {
         metaCriticLabel.text = viewModel?.getMetacriticRate()
         gameDescriptionLabel.text = viewModel?.getGameDescription()
         gameImage.kf.setImage(with: viewModel?.getImageUrl())
-//        refreshScrollView()
+        checkIsFavorited()
+        closeButtonBackground()
     }
-    private func refreshScrollView(){
-        let scrollViewHeight = gameImage.frame.height + gameNameLabel.frame.height + releaseDateLabel.frame.height + metaCriticLabel.frame.height + gameDescriptionLabel.frame.height
-        scrollView.contentSize = CGSize(width: scrollView.frame.width, height: scrollViewHeight)
+    private func closeButtonBackground(){
+        self.closeButton.backgroundColor = UIColor(red: 200.0/255.0, green:200.0/255.0, blue:200.0/255.0, alpha:0.5)
     }
-    
+    private func checkIsFavorited(){
+        if let id = viewModel?.id, AppSession.shared.isFavorite(id: id){
+            favoriteButton.setImage(UIImage(named: "heartfill"), for: .normal)
+        }else{
+            favoriteButton.setImage(UIImage(named: "heart"), for: .normal)
+        }
+    }
     
     @IBAction func closeButtonClicked(_ sender: Any) {
         dismiss(animated: true, completion: nil)
     }
     
     
-    @IBAction func favoriteButtonClickes(_ sender: Any) {
-        tapped()
-    }
-    
-    func tapped(){
-        let tap = UITapGestureRecognizer(target: self, action: #selector(oneTapped))
-        favoriteButton.addGestureRecognizer(tap)
+    @IBAction func favoriteButtonClicked(_ sender: Any) {
         
-    }
-    @objc func oneTapped(){
-        let icon = UIImage(systemName: "heart.fill")
-        favoriteButton.setImage(icon, for: .normal)
-        let likedGames = LikedGames(id: gameImage.description, name:gameNameLabel.text ?? "sa" , image: metaCriticLabel.text ?? "bos")
-        let encoder = JSONEncoder()
-        if let encoded = try? encoder.encode(likedGames){
-            let userDeafults = UserDefaults.standard
-            userDeafults.setValue(encoded, forKey: "SavedGames")
-        }
-    }
+        guard let viewModel = viewModel else {return}
+        AppSession.shared.addAndRemoveFavorite(id: viewModel.id)
+        checkIsFavorited()
 
+    }
+        
+        
+        
 }
+  
+
+
+
+
+
