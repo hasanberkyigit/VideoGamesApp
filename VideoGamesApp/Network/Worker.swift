@@ -25,18 +25,32 @@ class Worker {
     ]
     }
     
-    func getGameLists(completionHandler: @escaping (Result<GamesList,NetworkError>) -> ()) {
+   
+    func getGameLists(page: Int,completionHandler: @escaping (Result<GamesList,NetworkError>) -> ()) {
        
-        WebService().request(baseURL+"/games", headers: headers, type: GamesList.self) { (result) in
+        WebService().request(baseURL + EndPoints.games.rawValue,params: ["page": page], headers: headers, type: GamesList.self) { (result) in
             
             switch result {
-            case .success(let games):
-                completionHandler(.success(games))
+            case .success(let gameList):
+                completionHandler(.success(gameList))
             case .failure(let error):
                 completionHandler(.failure(error))
             }
-            
         }
+        
     }
     
+    func getGameDetails(id: String,completionHandler: @escaping (Result<GameDetail,NetworkError>) -> ()) {
+       
+        WebService().request(baseURL + "/games/" + id,headers: headers, type: GameDetail.self) { (result) in
+            
+            switch result {
+            case .success(let gameDetails):
+                completionHandler(.success(gameDetails))
+            case .failure(let error):
+                completionHandler(.failure(error))
+            }
+        }
+    }
+   
 }

@@ -14,17 +14,13 @@ class FavoriteGameCollectionViewCell: UICollectionViewCell {
         
     private let favoriteImageView: UIImageView = {
     let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "house")
-//        imageView.backgroundColor = .yellow
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         return imageView
     }()
     private let gameNameLabel: UILabel = {
     let label = UILabel()
-        label.text = "GTA SAN ANDREAS IV"
         label.textAlignment = .left
-//        label.backgroundColor = .green
         return label
     }()
     
@@ -42,24 +38,18 @@ class FavoriteGameCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        gameNameLabel.frame = CGRect(x: contentView.frame.size.height - 20,
-                                     y:contentView.frame.size.height - 80 ,
+        gameNameLabel.frame = CGRect(x: contentView.frame.size.height + 10,
+                                     y:contentView.frame.size.height - 70 ,
                                      width: 300,
                                      height: 20)
         favoriteImageView.frame = CGRect(x: 5,
                                      y:10 ,
-                                     width: contentView.frame.size.height - 25,
-                                     height: contentView.frame.size.height - 25)
+                                     width: contentView.frame.size.height ,
+                                     height: contentView.frame.size.height)
     }
     
-    
-//    public func configure(likedGames: LikedGames){
-//        gameNameLabel.text = likedGames.
-//        favoriteImageView.kf.setImage(with: likedGames.image)
-//    }
-//    override func prepareForReuse() {
-//        super.prepareForReuse()
-//        gameNameLabel.text = nil
-//        favoriteImageView.kf.setImage(with: nil)
-//    }
+    func configure(game: Game) {
+        gameNameLabel.text = game.name
+        favoriteImageView.kf.setImage(with: game.background_image)
+    }
 }

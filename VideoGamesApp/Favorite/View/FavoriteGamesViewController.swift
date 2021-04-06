@@ -7,29 +7,42 @@
 
 import UIKit
 
-class FavoriteGamesViewController: UIViewController,UICollectionViewDataSource,UICollectionViewDelegate {
+class FavoriteGamesViewController: UIViewController {
   
-    private var viewModel: FavoriteViewModel?{
-        didSet{
-//            viewModel?.fetchGameDetail()
-        }
-    }
+    private var viewModel = FavoriteViewModel()
     private var collectionView: UICollectionView?
-    let userDeafults = UserDefaults.standard
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        gameDefaults()
+    lazy var flowLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         layout.minimumLineSpacing = 1
         layout.minimumInteritemSpacing = 1
         layout.itemSize = CGSize(width: view.frame.size.width - 4, height: view.frame.size.height/6 - 4)
+        return layout
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initViewModel()
+        initView()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        refreshScreen()
+    }
+    
+    private func initView(){
+        view.backgroundColor = .white
+        initCollectionView()
+    }
+    
+    private func initCollectionView() {
         collectionView = UICollectionView(frame: .zero,
-                                          collectionViewLayout: layout)
-        guard let collectionView = collectionView else {
-            return
-        }
+                                          collectionViewLayout: flowLayout)
+        
+        guard let collectionView = collectionView else {return}
+        collectionView.backgroundColor = .clear
         collectionView.register(FavoriteGameCollectionViewCell.self,
                                 forCellWithReuseIdentifier: FavoriteGameCollectionViewCell.identifier)
         collectionView.dataSource = self
@@ -37,60 +50,33 @@ class FavoriteGamesViewController: UIViewController,UICollectionViewDataSource,U
         
         view.addSubview(collectionView)
         collectionView.frame = view.bounds
-        gameDefaults()
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(true)
-        gameDefaults()
-    }
-    func setViewModel(viewModel: FavoriteViewModel) {
-        self.viewModel = viewModel
-    }
-    func bindFavoriteGame(){
-        viewModel?
-            .likedGameDetails
-            .subscribe(onNext: {[weak self] _ in
-                self?.initView()
-            }).disposed(by: viewModel!.disposeBag)
-    }
-    private func initView(){
-        
     }
     
+    private func initViewModel() {
+        viewModel.load()
+    }
+    
+    private func refreshScreen() {
+        viewModel.load()
+        collectionView?.reloadData()
+    }
+}
+
+extension FavoriteGamesViewController: UICollectionViewDataSource,UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel?.numberOfRowsInSection() ?? 5
+        return viewModel.numberOfItemsInSection()
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FavoriteGameCollectionViewCell.identifier, for: indexPath) as! FavoriteGameCollectionViewCell
-//        cell.configure(likedGame: gameDefaults())
+        cell.configure(game: viewModel.cellForItemAt(index: indexPath.row))
         return cell
     }
-
-    
-
-}
-
-
-
-
-
-
-
-
-
-
-extension FavoriteGamesViewController{
-    func gameDefaults(){
-        
-        if let savedGames = userDeafults.object(forKey: "SavedGames") as? Data{
-            let decoder = JSONDecoder()
-            if let loadedGames = try? decoder.decode(LikedGames.self, from: savedGames){
-                print("-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-//                print(loadedGames.id)
-                print(loadedGames.results[0].id)
-                
-            }
-        }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let detailVC = storyboard.instantiateViewController(identifier: "DetailsVC") as DetailViewController
+        detailVC.setViewModel(viewModel: viewModel.didSelectRowAt(index: indexPath.row))
+        detailVC.modalPresentationStyle = .fullScreen
+        self.present(detailVC, animated: true, completion: nil)
     }
 }
